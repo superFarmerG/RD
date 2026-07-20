@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Residual Disease Prediction Calculator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+
+    .form-group input:focus {
+      border-color: #667eea;
+      outline: none;
+    }
+
+    .features-section {
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .features-section h3 {
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 18px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+    }
+
+    .feature-item {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+
+    .feature-item label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #555;
+      font-size: 13px;
+    }
+
+    .feature-item input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .feature-item input:focus {
+      border-color: #667eea;
+      outline: none;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .result-section {
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .result-section.show {
+      display: block;
+    }
+
+    .result-section.high-risk {
+      background: #fff5f5;
+      border: 2px solid #ff6b6b;
+    }
+
+    .result-section.low-risk {
+      background: #f0fff4;
+      border: 2px solid #69db7c;
+    }
+
+    .result-title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .result-section.high-risk .result-title {
+      color: #dc2626;
+    }
+
+    .result-section.low-risk .result-title {
+      color: #16a34a;
+    }
+
+    .result-detail {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    .probability-bar {
+      height: 24px;
+      background: #eee;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .probability-fill {
+      height: 100%;
+      border-radius: 12px;
+      transition: width 0.5s;
+    }
+
+    .probability-fill.high {
+      background: linear-gradient(90deg, #ff6b6b, #dc2626);
+    }
+
+    .probability-fill.low {
+      background: linear-gradient(90deg, #69db7c, #16a34a);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #667eea;
+      font-size: 16px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .model-info {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 20px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 6px;
+    }
+
+    .footer {
+      background: #f8f9fa;
+      padding: 15px;
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+    }
+
+    @media (max-width: 600px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header h1 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Residual Disease Prediction Calculator</h1>
+      <p>Machine learning-based medical prediction tool for identifying residual disease after treatment</p>
+    </div>
+
+    <div class="content">
+      <div id="model-info" class="model-info">Random Forest (RFE-T3) - Using RFE selected features (11 features)</div>
+
+      <div class="features-section">
+        <h3>Enter Feature Values</h3>
+        <div class="features-grid" id="features-grid"></div>
+
+        <button id="predict-btn" class="btn btn-primary" style="margin-top: 20px;" disabled>
+          Predict
+        </button>
+      </div>
+
+      <div class="loading" id="loading" style="display: none;">
+        <div class="spinner"></div>
+        Analyzing... Please wait.
+      </div>
+
+      <div class="result-section" id="result-section">
+        <div class="result-title" id="result-title"></div>
+        <div class="result-detail">
+          <strong>Prediction Probability: </strong> <span id="probability"></span>%
+        </div>
+        <div class="probability-bar">
+          <div class="probability-fill" id="probability-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Based on machine learning models trained on clinical data</p>
+    </div>
+  </div>
+
+  <script>
+    var MODEL_DATA = {
+      "scaler": {
+        "mean": [0.01435407, 0.0861244, 1.17703349, 0.215311, 1.04784689, 1.85645933, 2.10526316, 0.0861244, 0.03827751, 0.03827751, 1.46411483],
+        "scale": [0.11894548, 0.28054766, 0.45067605, 0.41103793, 0.21344218, 0.56911658, 0.69751511, 0.28054766, 0.19186543, 0.19186543, 0.49871059]
+      },
+      "features": ["CEA", "CA199", "Time2", "Cholecystectomy_procedure", "Pathological_type", "T", "Tumor_differentiation", "Perineural_invasion", "Microvascular_invasion", "12LN", "Age"],
+      "n_estimators": 50,
+      "trees": []
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var featuresGrid = document.getElementById('features-grid');
+      var predictBtn = document.getElementById('predict-btn');
+      var loading = document.getElementById('loading');
+      var resultSection = document.getElementById('result-section');
+
+      var FEATURE_DISPLAY = {
+        'CEA': 'CEA',
+        'CA199': 'CA19-9',
+        'Time2': 'Time interval to re-resection',
+        'Cholecystectomy_procedure': 'Cholecystectomy procedure',
+        'Pathological_type': 'Pathological type',
+        'T': 'Primary T stage',
+        'Tumor_differentiation': 'Tumor differentiation',
+        'Perineural_invasion': 'Perineural invasion',
+        'Microvascular_invasion': 'Microvascular invasion',
+        '12LN': 'Station 12c lymph nodes',
+        'Age': 'Age'
+      };
+
+      MODEL_DATA.features.forEach(function (feature) {
+        var featureItem = document.createElement('div');
+        featureItem.className = 'feature-item';
+        featureItem.innerHTML = '<label>' + FEATURE_DISPLAY[feature] + '</label><input type="number" id="feature-' + feature + '" placeholder="Enter value" step="any">';
+        featuresGrid.appendChild(featureItem);
+
+        var input = featureItem.querySelector('input');
+        input.addEventListener('input', validateInputs);
+      });
+
+      function validateInputs() {
+        var inputs = featuresGrid.querySelectorAll('input');
+        var allFilled = true;
+
+        inputs.forEach(function (input) {
+          if (!input.value.trim()) {
+            allFilled = false;
+          }
+        });
+
+        predictBtn.disabled = !allFilled;
+      }
+
+      function loadModel() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'model_export.json', true);
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4 && xhr.status === 200) {
+            MODEL_DATA = JSON.parse(xhr.responseText);
+            predictBtn.disabled = false;
+          }
+        };
+        xhr.send();
+      }
+
+      loadModel();
+
+      function predict(inputData) {
+        var scaler = MODEL_DATA.scaler;
+        var scaled = inputData.map(function (val, i) {
+          return (val - scaler.mean[i]) / scaler.scale[i];
+        });
+
+        var predictions = MODEL_DATA.trees.map(function (tree) {
+          return predictTree(scaled, tree);
+        });
+
+        var sumPositive = predictions.reduce(function (acc, p) {
+          return acc + p;
+        }, 0);
+
+        var probability = sumPositive / MODEL_DATA.n_estimators;
+        var prediction = probability >= 0.5 ? 1 : 0;
+
+        return {
+          prediction: prediction,
+          probability: probability
+        };
+      }
+
+      function predictTree(x, tree) {
+        var node = 0;
+        while (tree.children_left[node] !== -1) {
+          var feature = tree.feature[node];
+          var threshold = tree.threshold[node];
+
+          if (x[feature] <= threshold) {
+            node = tree.children_left[node];
+          } else {
+            node = tree.children_right[node];
+          }
+        }
+
+        var values = tree.value[node][0];
+        return values[1] / (values[0] + values[1]);
+      }
+
+      predictBtn.addEventListener('click', function () {
+        var featureValues = {};
+        var inputs = featuresGrid.querySelectorAll('input');
+
+        inputs.forEach(function (input) {
+          var featureName = input.id.replace('feature-', '');
+          featureValues[featureName] = parseFloat(input.value);
+        });
+
+        var inputData = MODEL_DATA.features.map(function (feature) {
+          return featureValues[feature];
+        });
+
+        loading.style.display = 'block';
+        resultSection.classList.remove('show');
+        predictBtn.disabled = true;
+
+        setTimeout(function () {
+          var result = predict(inputData);
+
+          loading.style.display = 'none';
+          predictBtn.disabled = false;
+          resultSection.classList.add('show');
+
+          var resultTitle = document.getElementById('result-title');
+          var probability = document.getElementById('probability');
+          var probabilityFill = document.getElementById('probability-fill');
+
+          if (result.prediction === 1) {
+            resultSection.className = 'result-section show high-risk';
+            resultTitle.textContent = '存在残留病灶 (RD=1)';
+            probabilityFill.className = 'probability-fill high';
+          } else {
+            resultSection.className = 'result-section show low-risk';
+            resultTitle.textContent = '不存在残留病灶 (RD=0)';
+            probabilityFill.className = 'probability-fill low';
+          }
+
+          var probPercent = (result.probability * 100).toFixed(2);
+          probability.textContent = probPercent;
+          probabilityFill.style.width = probPercent + '%';
+        }, 100);
+      });
+    });
+  </script>
+</body>
+
+</html>
