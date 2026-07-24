@@ -108,15 +108,17 @@
       font-size: 13px;
     }
 
-    .feature-item input {
+    .feature-item select {
       width: 100%;
       padding: 10px;
       border: 1px solid #ddd;
       border-radius: 6px;
       font-size: 14px;
+      background-color: white;
+      cursor: pointer;
     }
 
-    .feature-item input:focus {
+    .feature-item select:focus {
       border-color: #667eea;
       outline: none;
     }
@@ -277,6 +279,10 @@
 
     <div class="content">
       <div id="model-info" class="model-info">Random Forest (RFE-T3) - Using RFE selected features (11 features)</div>
+      <div class="model-info" style="background-color: #fff3cd; border: 1px solid #ffeeba;">
+        <strong>Note:</strong> Dropdown option labels are inferred from model statistics. Please verify encoding against
+        the original dataset if available.
+      </div>
 
       <div class="features-section">
         <h3>Enter Feature Values</h3>
@@ -295,7 +301,7 @@
       <div class="result-section" id="result-section">
         <div class="result-title" id="result-title"></div>
         <div class="result-detail">
-          <strong>Prediction Probability: </strong> <span id="probability"></span>%
+          <strong>Residual Disease Prediction Probability: </strong> <span id="probability"></span>
         </div>
         <div class="probability-bar">
           <div class="probability-fill" id="probability-fill"></div>
@@ -339,22 +345,92 @@
         'Age': 'Age'
       };
 
+      var FEATURE_OPTIONS = {
+        'CEA': [
+          { value: '', label: 'Select...' },
+          { value: '0', label: 'Negative (< 5 ng/mL)' },
+          { value: '1', label: 'Positive (>= 5 ng/mL)' }
+        ],
+        'CA199': [
+          { value: '', label: 'Select...' },
+          { value: '0', label: 'Negative (< 37 U/mL)' },
+          { value: '1', label: 'Positive (>= 37 U/mL)' }
+        ],
+        'Time2': [
+          { value: '', label: 'Select...' },
+          { value: '0', label: 'Short (< 3 months)' },
+          { value: '1', label: 'Medium (3-6 months)' },
+          { value: '2', label: 'Long (> 6 months)' }
+        ],
+        'Cholecystectomy_procedure': [
+          { value: '', label: 'Select...' },
+          { value: '0', label: 'Laparoscopic' },
+          { value: '1', label: 'Open' }
+        ],
+        'Pathological_type': [
+          { value: '', label: 'Select...' },
+          { value: '1', label: 'Adenocarcinoma' },
+          { value: '2', label: 'Adenosquamous carcinoma' },
+          { value: '3', label: 'Other' }
+        ],
+        'T': [
+          { value: '', label: 'Select...' },
+          { value: '1', label: 'T1' },
+          { value: '2', label: 'T2' },
+          { value: '3', label: 'T3' }
+        ],
+        'Tumor_differentiation': [
+          { value: '', label: 'Select...' },
+          { value: '1', label: 'Well differentiated' },
+          { value: '2', label: 'Moderately differentiated' },
+          { value: '3', label: 'Poorly differentiated' }
+        ],
+        'Perineural_invasion': [
+          { value: '', label: 'Select...' },
+          { value: '0', label: 'Absent' },
+          { value: '1', label: 'Present' }
+        ],
+        'Microvascular_invasion': [
+          { value: '', label: 'Select...' },
+          { value: '0', label: 'Absent' },
+          { value: '1', label: 'Present' }
+        ],
+        '12LN': [
+          { value: '', label: 'Select...' },
+          { value: '0', label: 'Negative' },
+          { value: '1', label: 'Positive' }
+        ],
+        'Age': [
+          { value: '', label: 'Select...' },
+          { value: '0', label: '< 60 years' },
+          { value: '1', label: '60-70 years' },
+          { value: '2', label: '> 70 years' }
+        ]
+      };
+
       MODEL_DATA.features.forEach(function (feature) {
         var featureItem = document.createElement('div');
         featureItem.className = 'feature-item';
-        featureItem.innerHTML = '<label>' + FEATURE_DISPLAY[feature] + '</label><input type="number" id="feature-' + feature + '" placeholder="Enter value" step="any">';
+
+        var selectHtml = '<label>' + FEATURE_DISPLAY[feature] + '</label><select id="feature-' + feature + '">';
+        FEATURE_OPTIONS[feature].forEach(function (option) {
+          selectHtml += '<option value="' + option.value + '">' + option.label + '</option>';
+        });
+        selectHtml += '</select>';
+
+        featureItem.innerHTML = selectHtml;
         featuresGrid.appendChild(featureItem);
 
-        var input = featureItem.querySelector('input');
-        input.addEventListener('input', validateInputs);
+        var select = featureItem.querySelector('select');
+        select.addEventListener('change', validateInputs);
       });
 
       function validateInputs() {
-        var inputs = featuresGrid.querySelectorAll('input');
+        var selects = featuresGrid.querySelectorAll('select');
         var allFilled = true;
 
-        inputs.forEach(function (input) {
-          if (!input.value.trim()) {
+        selects.forEach(function (select) {
+          if (!select.value.trim()) {
             allFilled = false;
           }
         });
@@ -368,7 +444,7 @@
         xhr.onreadystatechange = function () {
           if (xhr.readyState === 4 && xhr.status === 200) {
             MODEL_DATA = JSON.parse(xhr.responseText);
-            predictBtn.disabled = false;
+            validateInputs();
           }
         };
         xhr.send();
@@ -418,11 +494,11 @@
 
       predictBtn.addEventListener('click', function () {
         var featureValues = {};
-        var inputs = featuresGrid.querySelectorAll('input');
+        var selects = featuresGrid.querySelectorAll('select');
 
-        inputs.forEach(function (input) {
-          var featureName = input.id.replace('feature-', '');
-          featureValues[featureName] = parseFloat(input.value);
+        selects.forEach(function (select) {
+          var featureName = select.id.replace('feature-', '');
+          featureValues[featureName] = parseFloat(select.value);
         });
 
         var inputData = MODEL_DATA.features.map(function (feature) {
@@ -446,11 +522,11 @@
 
           if (result.prediction === 1) {
             resultSection.className = 'result-section show high-risk';
-            resultTitle.textContent = '存在残留病灶 (RD=1)';
+            resultTitle.textContent = 'Residual Disease Present (RD=1)';
             probabilityFill.className = 'probability-fill high';
           } else {
             resultSection.className = 'result-section show low-risk';
-            resultTitle.textContent = '不存在残留病灶 (RD=0)';
+            resultTitle.textContent = 'No Residual Disease (RD=0)';
             probabilityFill.className = 'probability-fill low';
           }
 
