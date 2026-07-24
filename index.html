@@ -100,27 +100,51 @@
       border: 1px solid #ddd;
     }
 
-    .feature-item label {
+    .feature-item label.feature-label {
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       font-weight: 500;
       color: #555;
       font-size: 13px;
     }
 
-    .feature-item select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
-      background-color: white;
-      cursor: pointer;
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
-    .feature-item select:focus {
+    .radio-option {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .radio-option:hover {
+      background: #e9ecef;
       border-color: #667eea;
-      outline: none;
+    }
+
+    .radio-option.selected {
+      background: #e8f0fe;
+      border-color: #667eea;
+    }
+
+    .radio-option input[type="radio"] {
+      margin-right: 10px;
+      width: 16px;
+      height: 16px;
+      accent-color: #667eea;
+    }
+
+    .radio-option span {
+      font-size: 13px;
+      color: #333;
     }
 
     .btn {
@@ -279,10 +303,6 @@
 
     <div class="content">
       <div id="model-info" class="model-info">Random Forest (RFE-T3) - Using RFE selected features (11 features)</div>
-      <div class="model-info" style="background-color: #fff3cd; border: 1px solid #ffeeba;">
-        <strong>Note:</strong> Dropdown option labels are inferred from model statistics. Please verify encoding against
-        the original dataset if available.
-      </div>
 
       <div class="features-section">
         <h3>Enter Feature Values</h3>
@@ -320,7 +340,7 @@
         "mean": [0.01435407, 0.0861244, 1.17703349, 0.215311, 1.04784689, 1.85645933, 2.10526316, 0.0861244, 0.03827751, 0.03827751, 1.46411483],
         "scale": [0.11894548, 0.28054766, 0.45067605, 0.41103793, 0.21344218, 0.56911658, 0.69751511, 0.28054766, 0.19186543, 0.19186543, 0.49871059]
       },
-      "features": ["CEA", "CA199", "Time2", "Cholecystectomy_procedure", "Pathological_type", "T", "Tumor_differentiation", "Perineural_invasion", "Microvascular_invasion", "12LN", "Age"],
+      "features": ["T", "Perineural_invasion", "Age", "Tumor_differentiation", "Cholecystectomy_procedure", "12LN", "CA199", "Microvascular_invasion", "Pathological_type", "Time2", "CEA"],
       "n_estimators": 50,
       "trees": []
     };
@@ -332,9 +352,9 @@
       var resultSection = document.getElementById('result-section');
 
       var FEATURE_DISPLAY = {
-        'CEA': 'CEA',
-        'CA199': 'CA19-9',
-        'Time2': 'Time interval to re-resection',
+        'CEA': 'CEA (ng/mL)',
+        'CA199': 'CA19-9 (U/mL)',
+        'Time2': 'Time interval to re-resection (weeks)',
         'Cholecystectomy_procedure': 'Cholecystectomy procedure',
         'Pathological_type': 'Pathological type',
         'T': 'Primary T stage',
@@ -342,95 +362,91 @@
         'Perineural_invasion': 'Perineural invasion',
         'Microvascular_invasion': 'Microvascular invasion',
         '12LN': 'Station 12c lymph nodes',
-        'Age': 'Age'
+        'Age': 'Age (years)'
       };
 
       var FEATURE_OPTIONS = {
-        'CEA': [
-          { value: '', label: 'Select...' },
-          { value: '0', label: 'Negative (< 5 ng/mL)' },
-          { value: '1', label: 'Positive (>= 5 ng/mL)' }
-        ],
-        'CA199': [
-          { value: '', label: 'Select...' },
-          { value: '0', label: 'Negative (< 37 U/mL)' },
-          { value: '1', label: 'Positive (>= 37 U/mL)' }
-        ],
-        'Time2': [
-          { value: '', label: 'Select...' },
-          { value: '0', label: 'Short (< 3 months)' },
-          { value: '1', label: 'Medium (3-6 months)' },
-          { value: '2', label: 'Long (> 6 months)' }
-        ],
-        'Cholecystectomy_procedure': [
-          { value: '', label: 'Select...' },
-          { value: '0', label: 'Laparoscopic' },
-          { value: '1', label: 'Open' }
-        ],
-        'Pathological_type': [
-          { value: '', label: 'Select...' },
-          { value: '1', label: 'Adenocarcinoma' },
-          { value: '2', label: 'Adenosquamous carcinoma' },
-          { value: '3', label: 'Other' }
-        ],
         'T': [
-          { value: '', label: 'Select...' },
           { value: '1', label: 'T1' },
           { value: '2', label: 'T2' },
           { value: '3', label: 'T3' }
         ],
-        'Tumor_differentiation': [
-          { value: '', label: 'Select...' },
-          { value: '1', label: 'Well differentiated' },
-          { value: '2', label: 'Moderately differentiated' },
-          { value: '3', label: 'Poorly differentiated' }
-        ],
         'Perineural_invasion': [
-          { value: '', label: 'Select...' },
-          { value: '0', label: 'Absent' },
-          { value: '1', label: 'Present' }
-        ],
-        'Microvascular_invasion': [
-          { value: '', label: 'Select...' },
-          { value: '0', label: 'Absent' },
-          { value: '1', label: 'Present' }
-        ],
-        '12LN': [
-          { value: '', label: 'Select...' },
-          { value: '0', label: 'Negative' },
-          { value: '1', label: 'Positive' }
+          { value: '0', label: 'No' },
+          { value: '1', label: 'Yes' }
         ],
         'Age': [
-          { value: '', label: 'Select...' },
-          { value: '0', label: '< 60 years' },
-          { value: '1', label: '60-70 years' },
-          { value: '2', label: '> 70 years' }
-        ]
+          { value: '0', label: '≤60' },
+          { value: '1', label: '>60' },
+        ],
+        'Tumor_differentiation': [
+          { value: '1', label: 'Well' },
+          { value: '2', label: 'Moderate' },
+          { value: '3', label: 'Poor' }
+        ],
+        'Cholecystectomy_procedure': [
+          { value: '0', label: 'Laparoscopic cholecystectomy' },
+          { value: '1', label: 'Open cholecystectomy' }
+        ],
+        '12LN': [
+          { value: '0', label: 'Non-metastasis' },
+          { value: '1', label: 'Metastasis' }
+        ],
+        'CA199': [
+          { value: '0', label: '≤39.0' },
+          { value: '1', label: '>39.0' }
+        ],
+        'Microvascular_invasion': [
+          { value: '0', label: 'No' },
+          { value: '1', label: 'Yes' }
+        ],
+        'Pathological_type': [
+          { value: '1', label: 'Adenocarcinoma' },
+          { value: '2', label: 'Non-adenocarcinoma' },
+        ],
+        'Time2': [
+          { value: '0', label: '≤2' },
+          { value: '1', label: '2~4' },
+          { value: '2', label: '>4' }
+        ],
+        'CEA': [
+          { value: '0', label: '≤5.0' },
+          { value: '1', label: '>5.0' }
+        ],
       };
 
       MODEL_DATA.features.forEach(function (feature) {
         var featureItem = document.createElement('div');
         featureItem.className = 'feature-item';
 
-        var selectHtml = '<label>' + FEATURE_DISPLAY[feature] + '</label><select id="feature-' + feature + '">';
+        var radioHtml = '<label class="feature-label">' + FEATURE_DISPLAY[feature] + '</label><div class="radio-group">';
         FEATURE_OPTIONS[feature].forEach(function (option) {
-          selectHtml += '<option value="' + option.value + '">' + option.label + '</option>';
+          radioHtml += '<label class="radio-option"><input type="radio" name="' + feature + '" value="' + option.value + '"><span>' + option.label + '</span></label>';
         });
-        selectHtml += '</select>';
+        radioHtml += '</div>';
 
-        featureItem.innerHTML = selectHtml;
+        featureItem.innerHTML = radioHtml;
         featuresGrid.appendChild(featureItem);
 
-        var select = featureItem.querySelector('select');
-        select.addEventListener('change', validateInputs);
+        var radios = featureItem.querySelectorAll('input[type="radio"]');
+        radios.forEach(function (radio) {
+          radio.addEventListener('change', function () {
+            // 更新选中状态样式
+            featureItem.querySelectorAll('.radio-option').forEach(function (opt) {
+              opt.classList.remove('selected');
+            });
+            this.closest('.radio-option').classList.add('selected');
+            validateInputs();
+          });
+        });
       });
 
       function validateInputs() {
-        var selects = featuresGrid.querySelectorAll('select');
         var allFilled = true;
 
-        selects.forEach(function (select) {
-          if (!select.value.trim()) {
+        MODEL_DATA.features.forEach(function (feature) {
+          var checked = document.querySelector('input[name="' + feature + '"]:checked');
+          if (!checked) {
             allFilled = false;
           }
         });
@@ -494,11 +510,10 @@
 
       predictBtn.addEventListener('click', function () {
         var featureValues = {};
-        var selects = featuresGrid.querySelectorAll('select');
 
-        selects.forEach(function (select) {
-          var featureName = select.id.replace('feature-', '');
-          featureValues[featureName] = parseFloat(select.value);
+        MODEL_DATA.features.forEach(function (feature) {
+          var checked = document.querySelector('input[name="' + feature + '"]:checked');
+          featureValues[feature] = parseFloat(checked.value);
         });
 
         var inputData = MODEL_DATA.features.map(function (feature) {
@@ -524,14 +539,18 @@
             resultSection.className = 'result-section show high-risk';
             resultTitle.textContent = 'Residual Disease Present (RD=1)';
             probabilityFill.className = 'probability-fill high';
-          } else {
+          } else if (result.prediction === 0) {
             resultSection.className = 'result-section show low-risk';
             resultTitle.textContent = 'No Residual Disease (RD=0)';
             probabilityFill.className = 'probability-fill low';
+          } else {
+            resultSection.className = 'result-section show unknown-risk';
+            resultTitle.textContent = 'Unknown Risk (RD=0)';
+            probabilityFill.className = 'probability-fill unknown';
           }
 
           var probPercent = (result.probability * 100).toFixed(2);
-          probability.textContent = probPercent;
+          probability.textContent = probPercent + '%';
           probabilityFill.style.width = probPercent + '%';
         }, 100);
       });
